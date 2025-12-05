@@ -49,20 +49,17 @@ initDatabase().then(() => {
 // CORS
 app.use(cors({
   origin: function (origin, callback) {
+    // Разрешаем запросы без origin (мобильные приложения, curl и т.д.)
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
-  'https://ritualnaya-frontend.vercel.app',
-  'https://ritualnaya-api.onrender.com',
-  'https://navelworf.pagekite.me',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'http://localhost:3001', 
-  'http://127.0.0.1:3001',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  process.env.FRONTEND_URL // Это должно быть в переменных окружения
-].filter(Boolean);
+      'https://ritualnaya-spravochnaya.vercel.app',
+      'https://ritualnaya-api.onrender.com',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'http://localhost:3001',
+      'http://127.0.0.1:3001'
+    ];
 
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
@@ -71,11 +68,26 @@ app.use(cors({
       return callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,
+  credentials: true, // 🔥 ВАЖНО: разрешаем отправку cookies/токенов
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization', // 🔥 ВАЖНО: для JWT токенов
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'X-Auth-Token',
+    'X-CSRF-Token'
+  ],
+  exposedHeaders: [
+    'Authorization', // 🔥 ВАЖНО: клиент сможет читать этот заголовок
+    'X-Auth-Token',
+    'X-CSRF-Token'
+  ],
+  maxAge: 86400 // 24 часа
 }));
 
+// Обработка preflight запросов
 app.options('*', cors());
 
 // Парсинг JSON
