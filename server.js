@@ -52,7 +52,8 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
-  'https://ritualnaya-frontend.vercel.app', // Добавь Vercel домен
+  'https://ritualnaya-frontend.vercel.app',
+  'https://ritualnaya-api.onrender.com',
   'https://navelworf.pagekite.me',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
