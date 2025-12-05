@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: ritualnaya-api
+    env: node
+    plan: free
+    region: frankfurt  # Или ближайший к тебе
+    branch: main
+    healthCheckPath: /api/health
+    healthCheckTimeout: 30
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: RENDER
+        sync: false
+        value: true
+    buildCommand: npm install
+    startCommand: npm run render-start
+    disk:
+      name: sqlite-data
+      mountPath: /opt/render/project/src
+      sizeGB: 1
