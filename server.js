@@ -53,7 +53,7 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
-      'https://ritualnaya-spravochnaya.vercel.app',
+      'https://ritualnaya-frontend.vercel.app',
       'https://ritualnaya-api.onrender.com',
       'http://localhost:3000',
       'http://127.0.0.1:3000',
@@ -86,6 +86,23 @@ app.use(cors({
   ],
   maxAge: 86400 // 24 часа
 }));
+
+app.use((req, res, next) => {
+  // Разрешаем крос-доменные credentials
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // Заголовки для кэширования
+  res.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.header('Pragma', 'no-cache');
+  res.header('Expires', '0');
+  
+  // Security headers
+  res.header('X-Content-Type-Options', 'nosniff');
+  res.header('X-Frame-Options', 'DENY');
+  res.header('X-XSS-Protection', '1; mode=block');
+  
+  next();
+});
 
 // Обработка preflight запросов
 app.options('*', cors());
