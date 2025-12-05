@@ -36,6 +36,8 @@ process.on('uncaughtException', (error) => {
 console.log('🔧 Loading environment variables...');
 console.log('SMTP_HOST:', process.env.SMTP_HOST || 'Not found');
 console.log('ADMIN_EMAILS:', process.env.ADMIN_EMAILS || 'Not found');
+console.log('🔑 JWT_SECRET loaded:', process.env.JWT_SECRET ? 'YES' : 'NO');
+console.log('🔑 JWT_SECRET length:', process.env.JWT_SECRET?.length || 0);
 
 // Инициализация базы данных
 console.log('🔄 Initializing database...');
@@ -47,65 +49,32 @@ initDatabase().then(() => {
 });
 
 // CORS
-app.use(cors({
-  origin: function (origin, callback) {
-    // Разрешаем запросы без origin (мобильные приложения, curl и т.д.)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'https://ritualnaya-frontend.vercel.app',
-      'https://ritualnaya-api.onrender.com',
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'http://localhost:3001',
-      'http://127.0.0.1:3001'
-    ];
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    } else {
-      console.log('CORS blocked for origin:', origin);
-      return callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true, // 🔥 ВАЖНО: разрешаем отправку cookies/токенов
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization', // 🔥 ВАЖНО: для JWT токенов
-    'X-Requested-With',
-    'Accept',
-    'Origin',
-    'X-Auth-Token',
-    'X-CSRF-Token'
-  ],
-  exposedHeaders: [
-    'Authorization', // 🔥 ВАЖНО: клиент сможет читать этот заголовок
-    'X-Auth-Token',
-    'X-CSRF-Token'
-  ],
-  maxAge: 86400 // 24 часа
-}));
-
 app.use((req, res, next) => {
-  // Разрешаем крос-доменные credentials
-  res.header('Access-Control-Allow-Credentials', 'true');
+  const allowedOrigins = [
+    'https://ritualnaya-frontend.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ];
   
-  // Заголовки для кэширования
-  res.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.header('Pragma', 'no-cache');
-  res.header('Expires', '0');
+  const origin = req.headers.origin;
   
-  // Security headers
-  res.header('X-Content-Type-Options', 'nosniff');
-  res.header('X-Frame-Options', 'DENY');
-  res.header('X-XSS-Protection', '1; mode=block');
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Expose-Headers', 'Authorization');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 часа
+  
+  // Обрабатываем OPTIONS запрос (preflight)
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
   
   next();
 });
-
-// Обработка preflight запросов
-app.options('*', cors());
 
 // Парсинг JSON
 app.use(express.json({ limit: '10mb' }));
